@@ -1,4 +1,4 @@
-
+from random import choice
 
 class Cipher:
     def __init__(self, charset=None):
@@ -23,6 +23,8 @@ class Cipher:
                 self.mapping.update({key: value})
 
     def decode(self, enc):
+        if self.charset == None:
+            raise CipherException('Charset must be defined before decoding.')
         dec_string = ''
         for char in enc:
             if char in self.mapping:
@@ -32,6 +34,18 @@ class Cipher:
             else:
                 dec_string += char
         return dec_string
+
+    def encode(self, dec):
+        if self.charset == None:
+            raise CipherException('Charset must be defined before encoding.')
+        encode_map = {v: k for k, v in self.mapping.items()}
+        enc_string = ''
+        for char in dec:
+            if char in encode_map:
+                enc_string += encode_map[char]
+            else:
+                enc_string += char
+        return enc_string
 
     def generate_charset(self, key):
         alphabets = {
@@ -47,7 +61,7 @@ class Cipher:
             }
 
         if key in alphabets:
-            return alphabets[key]
+            self.charset = alphabets[key]
         #use key as keyword
         key_alphabets = []
         for alphabet in alphabets:
@@ -55,13 +69,26 @@ class Cipher:
                 if char in alphabets[alphabet]:
                     if alphabet not in key_alphabets:
                         key_alphabets.append(alphabet)
-        print(key_alphabets)
         charset = key
         for alpha in key_alphabets:
             for char in alphabets[alpha]:
                 if char not in key:
                     charset += char
-        return charset
+        self.charset = charset
+
+    def generate_mapping(self, path='map.txt'):
+        if self.charset == None:
+            raise CipherException('Charset must be defined before generating a mapping.')
+        chars = list(self.charset)
+        self.mapping = dict()
+        for char in self.charset:
+            value = choice(chars)
+            chars.remove(value)
+            self.mapping.update({char: value})
+        with open(path, 'w') as outfile:
+            for k, v in self.mapping.items():
+                outfile.write(f'{k}:{v}\n')
 
 
-
+class CipherException(Exception):
+    pass
