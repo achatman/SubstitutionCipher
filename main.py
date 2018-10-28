@@ -1,12 +1,8 @@
 
 
-default_charset = 'abcdefghijklmnopqrstuvwxyz'
-
-
 class Cipher:
-    def __init__(self, charset, enc_message):
+    def __init__(self, charset=None):
         self.charset = charset
-        self.enc = enc_message
         self.mapping = dict()
 
     def gen_blank_map(self, path='map.txt'):
@@ -26,9 +22,9 @@ class Cipher:
                 value = line[index+1:]
                 self.mapping.update({key: value})
 
-    def decode(self):
+    def decode(self, enc):
         dec_string = ''
-        for char in self.enc:
+        for char in enc:
             if char in self.mapping:
                 dec_string += self.mapping[char]
             elif char in self.charset:
@@ -36,3 +32,36 @@ class Cipher:
             else:
                 dec_string += char
         return dec_string
+
+    def generate_charset(self, key):
+        alphabets = {
+            'alpha_low': 'abcdefghijklmnopqrstuvwxyz',
+            'alpha_upp': 'ABCDEFGHIJKLMNOPQRSTUVWXYZ',
+            'numerals': '0123456789',
+            'greek_low': 'αβγδεζηθικλμνξοπρστυφχψω',
+            'greek_upp': 'ΑΒΓΔΕΖΗΘΙΚΛΜΝΞΟΠΡΣΤΥΦΧΨΩ',
+            'cyrillic_low': 'абвгдежзийклмнопрстуфхцчшщьюя',
+            'cyrillic_upp': 'АБВГДЕЖЗИЙКЛМНОПРСТУФХЦЧШЩЬЮЯ',
+            'arabic': 'غظضذخثتشرقصفعسنملكيطحزوهدجبأ',
+            'hebrew': 'א‬ב‬ג‬ד‬ה‬ו‬ז‬ח‬ט‬י‬כ‬מ‬נ‬ס‬ע‬פ‬צ‬ק‬ר‬ש‬ת'
+            }
+
+        if key in alphabets:
+            return alphabets[key]
+        #use key as keyword
+        key_alphabets = []
+        for alphabet in alphabets:
+            for char in key:
+                if char in alphabets[alphabet]:
+                    if alphabet not in key_alphabets:
+                        key_alphabets.append(alphabet)
+        print(key_alphabets)
+        charset = key
+        for alpha in key_alphabets:
+            for char in alphabets[alpha]:
+                if char not in key:
+                    charset += char
+        return charset
+
+
+
