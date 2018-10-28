@@ -59,9 +59,19 @@ class Cipher:
             'arabic': 'غظضذخثتشرقصفعسنملكيطحزوهدجبأ',
             'hebrew': 'א‬ב‬ג‬ד‬ה‬ו‬ז‬ח‬ט‬י‬כ‬מ‬נ‬ס‬ע‬פ‬צ‬ק‬ר‬ש‬ת'
             }
+        combined = {
+            'alpha': alphabets['alpha_upp'] + alphabets['alpha_low'],
+            'alphanumeric': alphabets['alpha_upp'] + alphabets['alpha_low'] + alphabets['numerals'],
+            'greek': alphabets['greek_upp'] + alphabets['greek_low'],
+            'cyrillic': alphabets['cyrillic_upp'] + alphabets['cyrillic_low']
+            }
 
         if key in alphabets:
             self.charset = alphabets[key]
+            return
+        if key in combined:
+            self.charset = combined[key]
+            return
         #use key as keyword
         key_alphabets = []
         for alphabet in alphabets:
