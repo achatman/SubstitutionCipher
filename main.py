@@ -99,6 +99,18 @@ class Cipher:
             for k, v in self.mapping.items():
                 outfile.write(f'{k}:{v}\n')
 
+    def frequency_analysis(self, encoded, freq_path, outpath='map.txt'):
+        fa = FreqAnalysis(self.charset, freq_path)
+        self.mapping = fa.analyze(encoded, outpath)
+
+
+
+
+class FreqAnalysis:
+    def __init__(self, charset, freq_path):
+        self.charset = charset
+        self.ideal_freq = self.load_frequency(freq_path)
+
     def load_frequency(self, path):
         freq = dict()
         with open(path) as infile:
@@ -107,10 +119,7 @@ class Cipher:
                 freq.update({k: float(v)})
         return freq
 
-    def frequency_analysis(self, encoded, freq_path, map_path='map.txt'):
-        if self.charset == None:
-            raise CipherException('Charset must be defined before running a frequency analysis.')
-        ideal_freq = self.load_frequency(freq_path)
+    def analyze(self, encoded, outpath='map.txt'):
         real_freq = dict()
         for char in self.charset:
             if char in self.charset:
@@ -118,19 +127,16 @@ class Cipher:
         total = sum([v for k,v in real_freq.items()])
         for char in real_freq:
             real_freq[char] = 100 * real_freq[char] / total
-        sorted_ideal = sorted(ideal_freq.items(), key=lambda kv: kv[1])
+        sorted_ideal = sorted(self.ideal_freq.items(), key=lambda kv: kv[1])
         sorted_real = sorted(real_freq.items(), key=lambda kv: kv[1])
-        print(sorted_ideal)
-        print()
-        print(sorted_real)
-        print()
-        self.mapping = dict()
+        mapping = dict()
         for i in range(len(sorted_ideal)):
-            self.mapping.update({sorted_real[i][0]: sorted_ideal[i][0]})
+            mapping.update({sorted_real[i][0]: sorted_ideal[i][0]})
             print(sorted_real[i], sorted_ideal[i])
-        with open(map_path, 'w') as outfile:
-            for k, v in self.mapping.items():
-                outfile.write(f'{k}:{v}\n')
+        with open(outpath, 'w') as outfile:
+            for char in self.charset:
+                outfile.write(f'{char}:{mapping[char]}\n')
+        return mapping
 
 
 class CipherException(Exception):
@@ -139,7 +145,14 @@ class CipherException(Exception):
 
 enc = '''jhwabylk zopw av wpyhal ihzl: dl ohcl jhwabylk h zjpluapmpj clzzls pu aol dhalyz ulhy aol svuzkhsl yllm.  aolf hyl zabkfpun zvtl uld zwljplz vm mpzo.  p dvukly pm aolf jhbnoa hufaopun klspjpvbz?
 wpyhal ihzl av jhwabylk zopw: nvvk dvyr!  kpylja aol jvbyzl vm fvby zopw avdhykz tlpauly pzshuk huk wpjr bw zvtl jvjvubaz aolyl mvy kpuuly avupnoa.  adluaf vm aolt zovbsk il luvbno.
-jhwabylk zopw av wpyhal ihzl: dl nva svza olhkpun av tlpauly pzshuk huk dlua aol vwwvzpal kpyljapvu puzalhk, av ovwwly pzshuk.  hdhpapun mbyaoly puzaybjapvuz.  dl hszv zhd h nyvbw vm dohslz.  aol zjpluapzaz zhpk pa pz jhsslk h ‘wvk.’'''
+jhwabylk zopw av wpyhal ihzl: dl nva svza olhkpun av tlpauly pzshuk huk dlua aol vwwvzpal kpyljapvu puzalhk, av ovwwly pzshuk.  hdhpapun mbyaoly puzaybjapvuz.  dl hszv zhd h nyvbw vm dohslz.  aol zjpluapzaz zhpk pa pz jhsslk h ‘wvk.’
+wpyhal ihzl av jhwabylk zopw: dlss, zpujl fvb dlua aol dyvun dhf, fvb tpnoa hz dlss nv vu av lttf uvlaoly pzshuk.  aolyl hyl zvtl upjl thunvlz vcly aolyl mvy fvb av wpjr huk iypun ihjr.
+jhwabylk zopw av wpyhal ihzl: p aovbnoa zvtlvul dhz hsslynpj av thunvlz... iba fvb hyl aol ivzz.  hufdhfz, pa pz upjl av ohcl aolzl zjpluapzaz av rllw bz jvtwhuf.  pa dhz nlaapun svulsf dhpapun hss aolzl flhyz vba pu aopz klzlyalk wshjl mvy zvtlivkf dl jvbsk rpkuhw.  dl hyl jbyyluasf uvyaolhza vm lttf uvlaoly pzshuk.
+wpyhal ihzl av jhwabylk zopw: aoha pz nylha aoha fvb thkl zvtl uld myplukz.  wslhzl jvtl ihjr mvy kpuuly aovbno.  dl hyl nlaapun obunyf olyl.  aol wpyhal zald pz wpwpun ova.
+jhwabylk zopw av wpyhal ihzl: dl dvbsk svcl av jvtl ihjr mvy kpuuly, iba aolyl pz h zspnoa wyvislt.  dl nva h ipa avv lejpalk dolu dl jhwabylk aol zopw huk dl aoyld aol leayh mbls vclyivhyk.  uvd dl ohcl ybu vba vm nhz huk hyl msvhapun hyvbuk hptslzzsf.  wslhzl zluk olsw.  vby jbyylua svjhapvu pz aol zaypjrshuk zvbuk.
+wpyhal ihzl av jhwabylk zopw: nylha dvyr, nbfz!  (p ovwl aoha zhyjhzt jhu il ayhuztpaalk vcly aol yhkpv).  dl hyl zlukpun vba h zthss tvavyivha av iypun fvb leayh mbls.  dl hyl nvpun av zahya lhapun kpuuly dpaovba fvb.  pa pz zptwsf avv svun av dhpa, huk dl dhua wsluaf vm aptl slma mvy klzzlya.  vy pz pa klzlya?  p jhu ulcly yltltily ovd av zwlss aoha vul.
+jhwabylk zopw av wpyhal ihzl: aol ylzjbl ivha hyypclkhuk dl nva aol mbls aoha dl ullklk.  dl hyl vu aol dhf ihjr av ihzl huk hyl kyvwwpun hujovy pu aol thaolthapjphu’z jvcl.  slhcl zvtl mvvk mvy bz!
+'''
 c = Cipher()
 c.generate_charset('alpha_low')
 c.frequency_analysis(enc, 'frequencies/english.freq')
