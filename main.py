@@ -100,16 +100,17 @@ class Cipher:
                 outfile.write(f'{k}:{v}\n')
 
     def frequency_analysis(self, encoded, freq_path, outpath='map.txt'):
-        fa = FreqAnalysis(self.charset, freq_path)
-        self.mapping = fa.analyze(encoded, outpath)
+        fa = FreqAnalysis(self.charset, encoded, freq_path)
+        self.mapping = fa.analyze(outpath)
 
 
 
 
 class FreqAnalysis:
-    def __init__(self, charset, freq_path):
+    def __init__(self, charset, encoded, freq_path):
         self.charset = charset
         self.ideal_freq = self.load_frequency(freq_path)
+        self.e = encoded
 
     def load_frequency(self, path):
         freq = dict()
@@ -119,24 +120,57 @@ class FreqAnalysis:
                 freq.update({k: float(v)})
         return freq
 
-    def analyze(self, encoded, outpath='map.txt'):
+    def decode(self):
+        d = ''
+        for char in self.e:
+            if char in self.mapping:
+                d += self.mapping[char]
+            elif char in self.charset:
+                d += '_'
+            else:
+                d += char
+        return d
+
+    def chi2test(self, decoded):
+        max_chi2 = 0
+        max_char = self.charset[0]
+        sum_chi2 = 0
+        total = 0
+        for char in decoded:
+            if char in self.charset:
+                total += 1
+        for char in self.charset:
+            observed = decoded.count(char)
+            expected = self.ideal_freq[char] * total
+            chi2 = (observed - expected)**2 / expected
+            if chi2 > max_chi2:
+                max_chi2 = chi2
+                max_char = char
+            sum_chi2 += chi2
+        return sum_chi2, max_char
+
+    def analyze(self, outpath='map.txt'):
+        #find initial mapping based on frequency only
         real_freq = dict()
         for char in self.charset:
-            if char in self.charset:
-                real_freq.update({char: encoded.count(char)})
+            real_freq.update({char: self.e.count(char)})
         total = sum([v for k,v in real_freq.items()])
         for char in real_freq:
-            real_freq[char] = 100 * real_freq[char] / total
+            real_freq[char] = real_freq[char] / total
         sorted_ideal = sorted(self.ideal_freq.items(), key=lambda kv: kv[1])
         sorted_real = sorted(real_freq.items(), key=lambda kv: kv[1])
-        mapping = dict()
+        self.mapping = dict()
         for i in range(len(sorted_ideal)):
-            mapping.update({sorted_real[i][0]: sorted_ideal[i][0]})
-            print(sorted_real[i], sorted_ideal[i])
+            self.mapping.update({sorted_real[i][0]: sorted_ideal[i][0]})
+        first_decode = self.decode()
+        print(self.chi2test(first_decode))
+
+
+
         with open(outpath, 'w') as outfile:
             for char in self.charset:
-                outfile.write(f'{char}:{mapping[char]}\n')
-        return mapping
+                outfile.write(f'{char}:{self.mapping[char]}\n')
+        return self.mapping
 
 
 class CipherException(Exception):
