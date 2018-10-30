@@ -1,4 +1,18 @@
 from random import choice
+from random import shuffle
+
+blank = '_'
+
+def min_function(*args, charset):
+    if len(args) != len(charset):
+        raise CipherException('A value is required for each char.')
+    rounded = [int(g) for g in args]
+    mapping = dict()
+    for i in range(len(args)):
+        mapping.update({charset[i]: charset[rounded[i]]})
+    d = decode(mapping)
+    print(mapping)
+    return chi2test(d, mapping)
 
 class Cipher:
     def __init__(self, charset=None):
@@ -30,7 +44,7 @@ class Cipher:
             if char in self.mapping:
                 dec_string += self.mapping[char]
             elif char in self.charset:
-                dec_string += '_'
+                dec_string += blank
             else:
                 dec_string += char
         return dec_string
@@ -120,37 +134,43 @@ class FreqAnalysis:
                 freq.update({k: float(v)})
         return freq
 
-    def decode(self):
+    def decode(self, mapping=None):
+        if mapping == None:
+            mapping = self.mapping
         d = ''
         for char in self.e:
-            if char in self.mapping:
-                d += self.mapping[char]
+            if char in mapping:
+                d += mapping[char]
             elif char in self.charset:
-                d += '_'
+                d += blank
             else:
                 d += char
         return d
 
-    def chi2test(self, decoded):
+    def chi2test(self, decoded, mapping=None):
+        if mapping == None:
+            mapping = self.mapping
         max_chi2 = 0
         max_char = self.charset[0]
         sum_chi2 = 0
         total = 0
         for char in decoded:
-            if char in self.charset:
+            if char in self.charset or char == blank:
                 total += 1
         for char in self.charset:
+            if char not in mapping:
+                continue
             observed = decoded.count(char)
             expected = self.ideal_freq[char] * total
             chi2 = (observed - expected)**2 / expected
+            print(char, chi2)
             if chi2 > max_chi2:
                 max_chi2 = chi2
                 max_char = char
             sum_chi2 += chi2
         return sum_chi2, max_char
 
-    def analyze(self, outpath='map.txt'):
-        #find initial mapping based on frequency only
+    def freq_map(self):
         real_freq = dict()
         for char in self.charset:
             real_freq.update({char: self.e.count(char)})
@@ -162,10 +182,25 @@ class FreqAnalysis:
         self.mapping = dict()
         for i in range(len(sorted_ideal)):
             self.mapping.update({sorted_real[i][0]: sorted_ideal[i][0]})
+
+
+
+
+    def analyze(self, outpath='map.txt'):
+        #find initial mapping based on frequency only
+        self.freq_map()
         first_decode = self.decode()
-        print(self.chi2test(first_decode))
+        #print(self.chi2test(first_decode))
+
+        args = (list(range(26)))
+        shuffle(args)
+        print(args)
+        print(min_function(*args, self.charset))
 
 
+
+
+        return dict()
 
         with open(outpath, 'w') as outfile:
             for char in self.charset:
@@ -190,4 +225,4 @@ jhwabylk zopw av wpyhal ihzl: aol ylzjbl ivha hyypclkhuk dl nva aol mbls aoha dl
 c = Cipher()
 c.generate_charset('alpha_low')
 c.frequency_analysis(enc, 'frequencies/english.freq')
-print(c.decode(enc))
+#print(c.decode(enc))
