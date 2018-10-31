@@ -3,17 +3,6 @@ from random import shuffle
 
 blank = '_'
 
-def min_function(*args, charset):
-    if len(args) != len(charset):
-        raise CipherException('A value is required for each char.')
-    rounded = [int(g) for g in args]
-    mapping = dict()
-    for i in range(len(args)):
-        mapping.update({charset[i]: charset[rounded[i]]})
-    d = decode(mapping)
-    print(mapping)
-    return chi2test(d, mapping)
-
 class Cipher:
     def __init__(self, charset=None):
         self.charset = charset
@@ -163,7 +152,6 @@ class FreqAnalysis:
             observed = decoded.count(char)
             expected = self.ideal_freq[char] * total
             chi2 = (observed - expected)**2 / expected
-            print(char, chi2)
             if chi2 > max_chi2:
                 max_chi2 = chi2
                 max_char = char
@@ -179,23 +167,39 @@ class FreqAnalysis:
             real_freq[char] = real_freq[char] / total
         sorted_ideal = sorted(self.ideal_freq.items(), key=lambda kv: kv[1])
         sorted_real = sorted(real_freq.items(), key=lambda kv: kv[1])
+        options = dict()
         self.mapping = dict()
         for i in range(len(sorted_ideal)):
             self.mapping.update({sorted_real[i][0]: sorted_ideal[i][0]})
+            low = max(0, i-1)
+            top = min(len(sorted_real), i+2)
+            options.update({sorted_real[i][0]: sorted_ideal[low:top]})
+        return options
 
 
 
 
     def analyze(self, outpath='map.txt'):
         #find initial mapping based on frequency only
-        self.freq_map()
+        options = self.freq_map()
         first_decode = self.decode()
-        #print(self.chi2test(first_decode))
+        min_chi2 = self.chi2test(first_decode)
+        min_map = self.mapping
+        test_map = self.mapping
+        for k,v in options.items():
+            print(k, v)
+            while len(v) > 0:
+                old_val = test_map[k]
+                new_val = v[0][0]
+                other_key = list(test_map.keys())[list(test_map.values()).index(new_val)]
+                test_map[k] = new_val
+                test_map[other_key] = old_val
+                v.remove(v[0])
+                print(v, test_map[k])
+            break
 
-        args = (list(range(26)))
-        shuffle(args)
-        print(args)
-        print(min_function(*args, self.charset))
+
+
 
 
 
