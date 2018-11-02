@@ -24,7 +24,7 @@ class Cipher:
                 value = line[index+1:]
                 self.mapping.update({key: value})
 
-    def decode(self, enc):
+    def decode(self, enc: str) -> str:
         if self.charset == None:
             raise CipherException('Charset must be defined before decoding.')
         dec_string = ''
@@ -37,7 +37,7 @@ class Cipher:
                 dec_string += char
         return dec_string
 
-    def encode(self, dec):
+    def encode(self, dec: str) -> str:
         if self.charset == None:
             raise CipherException('Charset must be defined before encoding.')
         encode_map = {v: k for k, v in self.mapping.items()}
@@ -49,7 +49,7 @@ class Cipher:
                 enc_string += char
         return enc_string
 
-    def generate_charset(self, key):
+    def generate_charset(self, key: str) -> str:
         alphabets = {
             'alpha_low': 'abcdefghijklmnopqrstuvwxyz',
             'alpha_upp': 'ABCDEFGHIJKLMNOPQRSTUVWXYZ',
@@ -102,7 +102,7 @@ class Cipher:
                 if char in self.mapping:
                     outfile.write(f'{char}:{self.mapping[char]}\n')
 
-    def freq_map(self, enc, freq_path, path='freq.map'):
+    def freq_map(self, enc: str, freq_path: str, path='freq.map'):
         ideal_freq = dict()
         with open(freq_path, encoding='utf-8') as freq_file:
             for line in freq_file:
