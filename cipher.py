@@ -1,13 +1,13 @@
 from random import choice
 
-blank = '_'
-
 class Cipher:
     """
     A class used to contain a monoalphabetic cipher.
 
     Attributes
     ----------
+    blank : char
+        a character to be used in decoding when the mapping is not complete
     charset : str
         a string containing allowed characters in the cipher
     mapping : dict
@@ -24,23 +24,59 @@ class Cipher:
     encode(dec)
         takes a string dec and returns an encoded string according to this Cipher's charset
     generate_charset(key)
-        takes a key and sets this Cipher's charset to the corresponding charset. Latin, greek, cyrillic, arabic, and hebrew alphabets are currently supported. For the alphabets that have upper and lower case, the corresponding charset can be accessed by, for example, 'alpha_low' or 'alpha_up'. A charset with upper and lower case is returned by the key 'alpha'.
+        takes a key and sets this Cipher's charset to the corresponding charset.
     generate_mapping(path='map.txt')
         generates a map over the current charset. The new map is set as this Cipher's mapping as well as output to the file specified in path.
     freq_map(enc, freq_path, path='freq.map')
         uses a basic frequency analysis to generate a mapping. The language frequencies are read from freq_path. The encoded frequencies are read from the string enc. The generated mapping is set to this Cipher's mapping and also output to path.
     """
 
-    def __init__(self, charset=None):
-        self.charset = charset
+    def __init__(self, blank_char='_'):
+        """
+        Initializes a Cipher object with empty charset and mapping.
+
+        Parameters
+        ----------
+        blank_char : char, optional
+            Character to be used as the default decoding.
+        """
+        self.blank = blank_char
+        self.charset = ''
         self.mapping = dict()
 
     def gen_blank_map(self, path='map.txt'):
+        """
+        Outputs a blank map based off self.charset to path.
+
+        Parameters
+        ----------
+        path : str, optional
+            Path to output the blank map to. Defaults to 'map.txt'.
+        """
+
         with open(path, mode='w') as outfile:
             for letter in self.charset:
                 outfile.write(f'{letter}:\n')
 
     def read_mapping(self, path='map.txt'):
+        """
+        Reads the file at path to fill self.mapping. The file should be a list of relations of the form:
+        <Encoded letter>:<Decoded letter>
+        For a charset consisting of lower case Latin letters, this may look like:
+        a:d
+        b:c
+        c:
+        d:g
+        ...
+        z:q
+        Note that in this example 'c' was not given a value in the map. Characters without a value will be decoded to self.blank.
+
+        Parameters
+        ----------
+        path : str, optional
+            Path to read the mapping from. Defaults to 'map.txt'.
+        """
+
         self.mapping = dict()
         with open(path) as infile:
             for line in infile:
@@ -53,6 +89,24 @@ class Cipher:
                 self.mapping.update({key: value})
 
     def decode(self, enc: str) -> str:
+        """
+        Decodes the string enc using self.mapping and returns the decoded string.
+
+        Parameters
+        ----------
+        enc : str
+            Encoded string to be decoded.
+
+        Returns
+        -------
+        The decoded version of enc, by self.mapping.
+
+        Raises
+        ------
+        CipherException
+            If the current charset is None.
+        """
+
         if self.charset == None:
             raise CipherException('Charset must be defined before decoding.')
         dec_string = ''
@@ -66,6 +120,24 @@ class Cipher:
         return dec_string
 
     def encode(self, dec: str) -> str:
+        """
+        Encodes the string dec using self.mapping and returns the encoded string.
+
+        Parameters
+        ----------
+        dec : str
+            String to be encoded.
+
+        Returns
+        -------
+        The encoded version of dec, by self.mapping.
+
+        Raises
+        ------
+        CipherException
+            If the current charset is None.
+        """
+
         if self.charset == None:
             raise CipherException('Charset must be defined before encoding.')
         encode_map = {v: k for k, v in self.mapping.items()}
@@ -78,6 +150,15 @@ class Cipher:
         return enc_string
 
     def generate_charset(self, key: str) -> str:
+        """
+        Sets self.charset based on the provided key. Available alphabets are: latin (alpha), greek, cyrillic, arabic, and hebrew. If an alphabet has upper and lower case characters, the charset will be upper followed by lower. A single case can be retrieved by appending '_low' or '_up' for lower or upper case, respectively. If the key parameter does not correspond to a provided charset, the key will be used as the basis for the charset (minus repeats). The rest of the alphabet will be appended in order, minus the charaters from the key. For example, for the key 'hello', the charset will be: 'heloabcdfgijkmnpqrstuvwxyz'.
+
+        Parameters
+        ----------
+        key : str
+            Selects a charset.
+        """
+
         alphabets = {
             'alpha_low': 'abcdefghijklmnopqrstuvwxyz',
             'alpha_up': 'ABCDEFGHIJKLMNOPQRSTUVWXYZ',
@@ -93,7 +174,10 @@ class Cipher:
             'alpha': alphabets['alpha_upp'] + alphabets['alpha_low'],
             'alphanumeric': alphabets['alpha_upp'] + alphabets['alpha_low'] + alphabets['numerals'],
             'greek': alphabets['greek_upp'] + alphabets['greek_low'],
-            'cyrillic': alphabets['cyrillic_upp'] + alphabets['cyrillic_low']
+            'cyrillic': alphabets['cyrillic_upp'] + alphabets['cyrillic_low'],
+            'latin_low' : alphabets['alpha_low'],
+            'latin_up' : alphabets['alpha_up'],
+            'latin' : alphabets['alpha_upp'] + alphabets['alpha_low']
             }
 
         if key in alphabets:
@@ -117,6 +201,20 @@ class Cipher:
         self.charset = charset
 
     def generate_mapping(self, path='map.txt'):
+        """
+        Creates a random mapping from the current charset. The new mapping is output to path and also saved to self.mapping.
+
+        Parameters
+        ----------
+        path : str, optional
+            Path to output the new mapping to. Defaults to 'map.txt'.
+
+        Raises
+        ------
+        CipherException
+            If the current charset is None.
+        """
+
         if self.charset == None:
             raise CipherException('Charset must be defined before generating a mapping.')
         chars = list(self.charset)
@@ -131,6 +229,26 @@ class Cipher:
                     outfile.write(f'{char}:{self.mapping[char]}\n')
 
     def freq_map(self, enc: str, freq_path: str, path='freq.map'):
+        """
+        The file at freq_path should be a list of ideal frequencies based on the language. This file is a similar form to the map files, except with a double, i.e.
+        a:0.0812
+        b:0.0149
+        ...
+        z:0.0007
+        The encoded frequencies are calculated from the input string enc. The frequency analysis orders encoded characters to decoded letters by ordering by frequency. This is a fairly primitive approach and should not be considered reliable. If the string enc is fairly representative of the language (i.e. of sufficient size and written with normal semantics), the most common letters are often correctly mapped.
+
+        After the mapping is created, it is written to the file at path and stored in self.mapping.
+
+        Parameters
+        ----------
+        enc : str
+            Encoded string from which to calculate real frequencies.
+        freq_path : str
+            Path to read ideal frequencies from.
+        path : str, optional
+            Path to output the mapping to. Defaults to 'freq.map'.
+        """
+
         ideal_freq = dict()
         with open(freq_path, encoding='utf-8') as freq_file:
             for line in freq_file:
