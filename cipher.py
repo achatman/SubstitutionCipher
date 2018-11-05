@@ -3,6 +3,34 @@ from random import choice
 blank = '_'
 
 class Cipher:
+    """
+    A class used to contain a monoalphabetic cipher.
+
+    Attributes
+    ----------
+    charset : str
+        a string containing allowed characters in the cipher
+    mapping : dict
+        a dictionary that represents a map from the encoded alphabet to the normal alphabet
+
+    Methods
+    -------
+    gen_blank_map(path='map.txt')
+        writes a blank map to the path provided using this Cipher's charset
+    read_mapping(path='map.txt')
+        takes in the file specified at path and stores it in this Cipher's mapping. The file should be a series of lines in the form: <Encoded letter>:<Decoded letter>
+    decode(enc)
+        takes an string enc and returns a decoded string according to this Cipher's charset
+    encode(dec)
+        takes a string dec and returns an encoded string according to this Cipher's charset
+    generate_charset(key)
+        takes a key and sets this Cipher's charset to the corresponding charset. Latin, greek, cyrillic, arabic, and hebrew alphabets are currently supported. For the alphabets that have upper and lower case, the corresponding charset can be accessed by, for example, 'alpha_low' or 'alpha_up'. A charset with upper and lower case is returned by the key 'alpha'.
+    generate_mapping(path='map.txt')
+        generates a map over the current charset. The new map is set as this Cipher's mapping as well as output to the file specified in path.
+    freq_map(enc, freq_path, path='freq.map')
+        uses a basic frequency analysis to generate a mapping. The language frequencies are read from freq_path. The encoded frequencies are read from the string enc. The generated mapping is set to this Cipher's mapping and also output to path.
+    """
+
     def __init__(self, charset=None):
         self.charset = charset
         self.mapping = dict()
@@ -52,12 +80,12 @@ class Cipher:
     def generate_charset(self, key: str) -> str:
         alphabets = {
             'alpha_low': 'abcdefghijklmnopqrstuvwxyz',
-            'alpha_upp': 'ABCDEFGHIJKLMNOPQRSTUVWXYZ',
+            'alpha_up': 'ABCDEFGHIJKLMNOPQRSTUVWXYZ',
             'numerals': '0123456789',
             'greek_low': 'αβγδεζηθικλμνξοπρστυφχψω',
-            'greek_upp': 'ΑΒΓΔΕΖΗΘΙΚΛΜΝΞΟΠΡΣΤΥΦΧΨΩ',
+            'greek_up': 'ΑΒΓΔΕΖΗΘΙΚΛΜΝΞΟΠΡΣΤΥΦΧΨΩ',
             'cyrillic_low': 'абвгдежзийклмнопрстуфхцчшщьюя',
-            'cyrillic_upp': 'АБВГДЕЖЗИЙКЛМНОПРСТУФХЦЧШЩЬЮЯ',
+            'cyrillic_up': 'АБВГДЕЖЗИЙКЛМНОПРСТУФХЦЧШЩЬЮЯ',
             'arabic': 'غظضذخثتشرقصفعسنملكيطحزوهدجبأ',
             'hebrew': 'א‬ב‬ג‬ד‬ה‬ו‬ז‬ח‬ט‬י‬כ‬מ‬נ‬ס‬ע‬פ‬צ‬ק‬ר‬ש‬ת'
             }
@@ -127,6 +155,7 @@ class Cipher:
             for char in self.charset:
                 if char in freqmap:
                     outfile.write(f'{char}:{freqmap[char]}\n')
+        self.mapping = freqmap
 
 class CipherException(Exception):
     pass
