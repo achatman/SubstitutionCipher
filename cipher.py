@@ -171,13 +171,13 @@ class Cipher:
             'hebrew': 'א‬ב‬ג‬ד‬ה‬ו‬ז‬ח‬ט‬י‬כ‬מ‬נ‬ס‬ע‬פ‬צ‬ק‬ר‬ש‬ת'
             }
         combined = {
-            'alpha': alphabets['alpha_upp'] + alphabets['alpha_low'],
-            'alphanumeric': alphabets['alpha_upp'] + alphabets['alpha_low'] + alphabets['numerals'],
-            'greek': alphabets['greek_upp'] + alphabets['greek_low'],
-            'cyrillic': alphabets['cyrillic_upp'] + alphabets['cyrillic_low'],
+            'alpha': alphabets['alpha_up'] + alphabets['alpha_low'],
+            'alphanumeric': alphabets['alpha_up'] + alphabets['alpha_low'] + alphabets['numerals'],
+            'greek': alphabets['greek_up'] + alphabets['greek_low'],
+            'cyrillic': alphabets['cyrillic_up'] + alphabets['cyrillic_low'],
             'latin_low' : alphabets['alpha_low'],
             'latin_up' : alphabets['alpha_up'],
-            'latin' : alphabets['alpha_upp'] + alphabets['alpha_low']
+            'latin' : alphabets['alpha_up'] + alphabets['alpha_low']
             }
 
         if key in alphabets:
@@ -193,7 +193,7 @@ class Cipher:
                 if char in alphabets[alphabet]:
                     if alphabet not in key_alphabets:
                         key_alphabets.append(alphabet)
-        charset = key
+        charset = ''.join(sorted(set(key), key=key.index))
         for alpha in key_alphabets:
             for char in alphabets[alpha]:
                 if char not in key:
